@@ -15,7 +15,7 @@ typedef struct ENode//边表节点
 	int ytop;//直线上端点的y坐标
 	double fm;//斜率倒数
 	struct ENode* next;//连接下一条边
-}EdgeNode,* pEdgeNode;
+}EdgeNode, * pEdgeNode;
 
 typedef struct//边表定义
 {
@@ -50,21 +50,38 @@ protected: // 仅从序列化创建
 	CFianlView() noexcept;
 	DECLARE_DYNCREATE(CFianlView)
 
-// 特性
+		// 特性
 public:
 	CFianlDoc* GetDocument() const;
+
+
+	//直线
+	bool m_isFirst = true;
+	LONG m_x0 = 0;
+	LONG m_y0 = 0;
+	LONG m_x1 = 0;
+	LONG m_y1 = 0;
+	double m_r = 0;
+
+	int m_type = 0;
+
+
+
+
+
 	int n;//传输的数目
 	int way;
 
-	int m_isFirst;//判断直线起点和终点
-	CPoint* point1;//存储直线的起点和终点坐标
+	//int m_isFirst;//判断直线起点和终点
+	//CPoint* point1;//存储直线的起点和终点坐标
 
-	CPoint* point3;// 记录圆的起点和半径
-	double m_r = 0;//圆的半径
+	//CPoint* point3;// 记录圆的起点和半径
+	//double m_r = 0;//圆的半径
 
-	int x[3];
-	int y[3];//圆弧的坐标
-	int m_isPoint;//判断圆弧的第几个点
+	int x_arc[3];
+	int y_arc[3];//圆弧的坐标
+	//int m_isPoint;//判断圆弧的第几个点
+	int m_ArcSeq = 0;//判断圆弧的第几个点
 
 	//填充
 	EdgeTable m_ET;//边表
@@ -81,7 +98,7 @@ public:
 	CPoint us_points[4];
 
 
-// 操作
+	// 操作
 public:
 	void CFianlView::DDALine(CDC* pDC, int x0, int y0, int x1, int y1, COLORREF color);//画线段
 	void CFianlView::MidPntCircle(CDC* pDC, int x0, int y0, double r, COLORREF color);//画圆
@@ -95,10 +112,11 @@ public:
 	int CFianlView::polygonFill(EdgeTable& ET, pAENode top, PixList* pixList);//多边形绘制
 	void CFianlView::setPixeles(int i, double start, double end, PixList* pixList);//求配对交点之间的像素点
 	void CFianlView::drawPolyFilled(CDC* pDC, COLORREF color);
-	
+
 	void CFianlView::DrawPolygon(CDC* pDC, CPoint* m_pCtrPs, int m_nCtrPs);//绘制多边形
 
 	//绘制Bezier曲线(定义法)
+	int init();
 	void CFianlView::computeCoefficients(int n, int* c);
 	void CFianlView::computePoint(float t, CPoint* pt, int m_nCtrPs, CPoint* m_pCtrPs, int* c);
 	void CFianlView::Bezier(CPoint* m_pCtrPs, int m_nCtrPs, int m, CPoint* m_curve);
@@ -109,7 +127,7 @@ public:
 	void CFianlView::GetPoint(CPoint* us_points);
 	void CFianlView::DrawPolygon(CDC* pDC);
 
-// 重写
+	// 重写
 public:
 	virtual void OnDraw(CDC* pDC);  // 重写以绘制该视图
 	virtual BOOL PreCreateWindow(CREATESTRUCT& cs);
@@ -118,7 +136,7 @@ protected:
 	virtual void OnBeginPrinting(CDC* pDC, CPrintInfo* pInfo);
 	virtual void OnEndPrinting(CDC* pDC, CPrintInfo* pInfo);
 
-// 实现
+	// 实现
 public:
 	virtual ~CFianlView();
 #ifdef _DEBUG
@@ -128,16 +146,22 @@ public:
 
 protected:
 
-// 生成的消息映射函数
+	// 生成的消息映射函数
 protected:
 	DECLARE_MESSAGE_MAP()
 public:
-	afx_msg void On_Line();
+	//afx_msg void On_Line();
 	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
+	afx_msg void OnLine();
+	afx_msg void OnCircle();
+	afx_msg void OnArc();
+	afx_msg void OnPolygon();
 };
 
 #ifndef _DEBUG  // FianlView.cpp 中的调试版本
 inline CFianlDoc* CFianlView::GetDocument() const
-   { return reinterpret_cast<CFianlDoc*>(m_pDocument); }
+{
+	return reinterpret_cast<CFianlDoc*>(m_pDocument);
+}
 #endif
 

@@ -21,6 +21,7 @@ using namespace std;
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
+#include "InputVert.h"
 
 
 // CFianlView
@@ -32,8 +33,13 @@ BEGIN_MESSAGE_MAP(CFianlView, CView)
 	ON_COMMAND(ID_FILE_PRINT, &CView::OnFilePrint)
 	ON_COMMAND(ID_FILE_PRINT_DIRECT, &CView::OnFilePrint)
 	ON_COMMAND(ID_FILE_PRINT_PREVIEW, &CView::OnFilePrintPreview)
-	ON_COMMAND(ID_2D32771, &CFianlView::On_Line)
+	//ON_COMMAND(ID_2D32771, &CFianlView::On_Line)
 	ON_WM_LBUTTONDOWN()
+	ON_COMMAND(ID_2D32771, &CFianlView::OnLine)
+	ON_COMMAND(ID_2D32772, &CFianlView::OnCircle)
+	ON_COMMAND(ID_2D32773, &CFianlView::OnArc)
+	ON_COMMAND(ID_2D32774, &CFianlView::OnPolygon)
+	ON_COMMAND(ID_2D32775, &CFianlView::OnPolygonFill)
 END_MESSAGE_MAP()
 
 // CFianlView 构造/析构
@@ -65,17 +71,49 @@ void CFianlView::OnDraw(CDC* pDC)
 	if (!pDoc)
 		return;
 
+	if (m_type == 1)
+	{
+		DDALine(pDC, m_x0, m_y0, m_x1, m_y1, RGB(255, 0, 0));
+	}
+	if (m_type == 2)
+	{
+		MidPntCircle(pDC, m_x0, m_y0, m_r, RGB(0, 0, 255));
+	}
+	if (m_type == 3)
+	{
+		DrawArc(pDC, x_arc, y_arc, RGB(0, 255, 255));
+	}
+	if (m_type == 4)
+	{
+		for (int i = 0; i < m_nCtrPs; i++)
+		{
+			if (i == m_nCtrPs - 1)
+			{
+				pDC->MoveTo(m_pCtrPs[i].x, m_pCtrPs[i].y);
+				pDC->LineTo(m_pCtrPs[0].x, m_pCtrPs[0].y);
+
+			}
+			else {
+				pDC->MoveTo(m_pCtrPs[i].x, m_pCtrPs[i].y);
+				pDC->LineTo(m_pCtrPs[i + 1].x, m_pCtrPs[i + 1].y);
+			}
+			if (m_nCtrPs == n) {
+				n = 0;
+			}
+		}
+	}
+
 	// TODO: 在此处为本机数据添加绘制代码
 	//画直线
-	switch (way)
+	/*switch (way)
 	{
 	case 1:
 		DDALine(pDC, point1[0].x, point1[0].y, point1[1].x, point1[1].y, RGB(0, 0, 0));
 		break;
 	default:
 		break;
-	}
-	
+	}*/
+
 	//DDALine(pDC, 100, 200, 300, 400, RGB(255, 0, 0));
 	//MidPntCircle(pDC, 200, 100, 50, RGB(0, 0, 255));
 	//int x[3] = { 100,400,600 };
@@ -235,7 +273,7 @@ void CFianlView::DrawArc(CDC* pDC, int x[3], int y[3], COLORREF color)
 {
 	double PI = 3.14;
 	double dx, dy;//圆心坐标
-	double a = (double)2 * (x[1] - x[0]); 
+	double a = (double)2 * (x[1] - x[0]);
 	double b = (double)2 * (y[1] - y[0]);
 	double c = (double)x[1] * x[1] + y[1] * y[1] - x[0] * x[0] - y[0] * y[0];
 	double d = (double)2 * (x[2] - x[1]);
@@ -453,7 +491,7 @@ int CFianlView::createET(CPoint* points, int nPnts, EdgeTable& ET)
 		q->fm = fm;
 		q->next = NULL;
 		p = ET.base[ybot];
-		while (p->next!=NULL)
+		while (p->next != NULL)
 		{
 			if (p->next->xbot > q->xbot)
 			{
@@ -484,7 +522,7 @@ void CFianlView::intersectionPnts(int y, pAENode top, double* pXs, int& nPnts)
 		if (p->ytop == y) side = false;
 		else side = true;
 		pXs[nPnts] = x;
-		if(nPnts > 0 && pXs[nPnts] == pXs[nPnts-1] && lastTag != side)
+		if (nPnts > 0 && pXs[nPnts] == pXs[nPnts - 1] && lastTag != side)
 		{
 			nPnts--;
 		}
@@ -570,8 +608,8 @@ int CFianlView::polygonFill(EdgeTable& ET, pAENode top, PixList* pixList)
 			updateAET(m_ET, m_top, i);
 		}
 	}
-		delete pXs;
-		return 1;
+	delete pXs;
+	return 1;
 }
 
 void CFianlView::setPixeles(int i, double start, double end, PixList* pixList)
@@ -608,7 +646,20 @@ void CFianlView::drawPolyFilled(CDC* pDC, COLORREF color)
 }
 
 //绘制Bezier曲线
-
+int CFianlView::init()
+{
+	//将空间的首地址赋给m_pCtrPs和m_curve指针（注意在适当时候释放相应的存储空间）
+	m_nCtrPs = 0;
+	m_nSPs = n * 100;
+	m_pCtrPs = new CPoint[n];  //最多10个点
+	m_curve = new CPoint[m_nSPs];   //假定400个
+	if (!m_pCtrPs)
+	{
+		return 0;
+	}
+	//	CPoint *m_curve; // （全部采样点坐标）
+	return 1;
+}
 void CFianlView::computeCoefficients(int n, int* c)//计算第k个点的系数c[k]
 {//n 为控制点数目，c 为存储空间的首地址，存储内容为系数
 	int k, i;
@@ -701,7 +752,7 @@ void CFianlView::DrawCurve(CDC* pDC, int count)
 					points[i][j].y = points[i][j - 1].y + abs(points[i][j - 1].y - points[i + 1][j - 1].y) * t;
 				}
 			}
-			
+
 		}
 		pDC->SetPixel((int)points[0][count - 1].x, (int)points[0][count - 1].y, RGB(0, 0, 255));
 	}
@@ -734,41 +785,116 @@ void CFianlView::DrawPolygon(CDC* pDC)
 	pen.DeleteObject();
 }
 
-void CFianlView::On_Line()
-{
-	// TODO: 在此添加命令处理程序代码
-	point1 = new CPoint[2];
-	m_isFirst = 0;
-	way = 1;
-	Invalidate();
-}
+//void CFianlView::On_Line()
+//{
+//	// TODO: 在此添加命令处理程序代码
+//	point1 = new CPoint[2];
+//	m_isFirst = 0;
+//	way = 1;
+//	Invalidate();
+//}
 
 
 
 void CFianlView::OnLButtonDown(UINT nFlags, CPoint point)
 {
 	// TODO: 在此添加消息处理程序代码和/或调用默认值
-	CFianlDoc* pDoc = GetDocument();
-	ASSERT_VALID(pDoc);
-	if (!pDoc)
-		return;
-	CView::OnLButtonDown(nFlags, point);
-	switch (way)
+
+	if (m_type == 1 || m_type == 2)
 	{
-	case 1:
-		if (m_isFirst == 0)
+		if (m_isFirst)// m_isFirst 为 CxxView 的成员，第一次按下鼠标左键
 		{
-			point1[0] = point1[1] = point;
+			m_isFirst = false;
+			m_x0 = point.x;
+			m_y0 = point.y;
 		}
-		if (m_isFirst == 1)
+		else
 		{
-			point1[1] = point;
-			m_isFirst = -1;
-			On_Line();
+			m_isFirst = true;
+			m_x1 = point.x;
+			m_y1 = point.y;
+			int dx = abs(m_x1 - m_x0);
+			int dy = abs(m_y1 - m_y0);
+			m_r = sqrt(dx * dx + dy * dy);
+			Invalidate(true);//刷新屏幕
 		}
-		m_isFirst++;
-		break;
-	default:
-		break;
 	}
+	if (m_type == 3)
+	{
+		if (m_ArcSeq == 0)
+		{
+			x_arc[0] = point.x;
+			y_arc[0] = point.y;
+			//AfxMessageBox(_T("圆弧圆弧圆弧"));
+			m_ArcSeq++;
+		}
+		else if (m_ArcSeq == 1)
+		{
+			x_arc[1] = point.x;
+			y_arc[1] = point.y;
+			m_ArcSeq++;
+
+		}
+		else if (m_ArcSeq == 2)
+		{
+			x_arc[2] = point.x;
+			y_arc[2] = point.y;
+			m_ArcSeq = 0;
+			Invalidate(true);//刷新屏幕
+		}
+	}
+	if (m_type == 4)
+	{
+		if (m_nCtrPs < n)
+		{
+			m_pCtrPs[m_nCtrPs] = point;
+			m_nCtrPs++;  //采样点增
+		}
+		Invalidate(true);
+	}
+	CView::OnLButtonDown(nFlags, point);
+}
+
+
+void CFianlView::OnLine()
+{
+	// TODO: 在此添加命令处理程序代码
+	m_type = 1;
+
+}
+
+
+void CFianlView::OnCircle()
+{
+	// TODO: 在此添加命令处理程序代码
+	m_type = 2;
+
+}
+
+
+void CFianlView::OnArc()
+{
+	// TODO: 在此添加命令处理程序代码
+	m_type = 3;
+}
+
+
+void CFianlView::OnPolygon()
+{
+	// TODO: 在此添加命令处理程序代码
+	m_type = 4;
+	InputVert VertDlg;
+	if (IDOK == VertDlg.DoModal())
+	{
+		n = VertDlg.m_InputVert;
+	}
+	init();
+
+}
+
+
+void CFianlView::OnPolygonFill()
+{
+	// TODO: 在此添加命令处理程序代码
+	m_type = 5;
 }

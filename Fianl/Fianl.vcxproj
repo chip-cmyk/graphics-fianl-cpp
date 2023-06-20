@@ -187,6 +187,7 @@
     <ClInclude Include="FianlDoc.h" />
     <ClInclude Include="FianlView.h" />
     <ClInclude Include="framework.h" />
+    <ClInclude Include="InputVert.h" />
     <ClInclude Include="MainFrm.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Resource.h" />
@@ -196,6 +197,7 @@
     <ClCompile Include="Fianl.cpp" />
     <ClCompile Include="FianlDoc.cpp" />
     <ClCompile Include="FianlView.cpp" />
+    <ClCompile Include="InputVert.cpp" />
     <ClCompile Include="MainFrm.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
